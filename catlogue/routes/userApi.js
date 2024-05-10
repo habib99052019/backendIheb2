@@ -3,6 +3,20 @@ const express = require('express')
 const router = express.Router();
 const lodash=require('lodash');
 const userSchema = require('../models/userSchema')
+const axios = require('axios');
+
+// Définir le token d'accès (obtenu en créant une application sur le portail des développeurs de Facebook)
+const accessToken = 'EAAPZA4N2HUuoBO43vkrGqzs5zkGgUgZCDZCAJ0ZCQhlwBEUoLpOi3WNz9a13GKM7Je674xJrm56u0kexNjfpqls3SujkbJzs14TKyDR5ZA9LCOg1U2ZCmfXeqx9vJRFEiK2yN98XiMUsvIyk6shOfUCzN9upkdOMimzEkM4MNDoO5zEubTySOFG4fSl3PLMtO3NWlwqMSe3GK6Y1JASbXwWUqE4Yv7GXsQlewGjZCZBSdhUZD';
+
+// Intérêt que vous ciblez (investissements immobiliers)
+const interest = 'real estate';
+const dataUser=[]
+// Endpoint de l'API Graph pour rechercher des pages liées à l'immobilier
+const pagesEndpoint = `https://graph.facebook.com/v12.0/search?type=page&q=${interest}&access_token=${accessToken}`;
+
+// Effectuer une requête GET à l'API Graph pour récupérer les pages liées à l'immobilier
+
+
   function convertDateToDDMMYY() {
     var currentDate = new Date();
     // Créer un objet Date à partir de la chaîne de date fournie
@@ -55,6 +69,31 @@ router.get('/all', async (req, res) => {
      var arr = jsonArray.sort((a, b) => b.dateNumber - a.dateNumber);
    console.log(arr[0],'sort')
      res.send(arr);
+//aaaa
+ });
+router.get('/dataUs', async (req, res) => {
+     
+    axios.get(pagesEndpoint)
+  .then(response => {
+    // Récupérer les IDs des pages
+    const pageIds = response.data.data.map(page => page.id);
+    // Pour chaque page, récupérer les utilisateurs qui ont aimé, suivi ou interagi avec cette page
+    pageIds.forEach(pageId => {
+      const usersEndpoint = `https://graph.facebook.com/v12.0/${pageId}/likes?access_token=${accessToken}`;
+      axios.get(usersEndpoint)
+        .then(usersResponse => {
+          // Traiter les données des utilisateurs (par exemple, stocker dans une base de données)
+        
+          res.send(usersResponse.data)
+        })
+        .catch(error => {
+          console.error('Erreur lors de la récupération des utilisateurs:', error);
+        });
+    });
+  })
+  .catch(error => {
+    console.error('Erreur lors de la récupération des pages:', error);
+  });
 //aaaa
  });
 router.get('/all/today', async (req, res) => {
